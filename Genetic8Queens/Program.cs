@@ -1,9 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Genetic8Queens
 {
@@ -12,83 +9,89 @@ namespace Genetic8Queens
         const int InitialPopulationSize = 8;
         const int NumOfQueens = 8;
         const double KeptPieceRatio = 0.5;
-        const double MutationChance = 0.1;
-        const int piecesMutated = 2;
+        const double MutationChance = 0.01;
+        const int PiecesMutated = 2;
         public static Random r = new Random();
 
         static void Main(string[] args)
         {
-            List<string> population = initialPopulationGeneration();
-
-            Console.WriteLine(Genetic_Algorithm(population));
+            Console.WriteLine(Genetic_Algorithm());
 
             Console.ReadKey();
         }
 
-        private static string Genetic_Algorithm(List<string> population)
+        private static int Genetic_Algorithm()
         {
+            List<int> population = InitialPopulationGeneration();
+
             List<int> fitnessOfPopulation = new List<int>();
 
             for (int j = 0; j < population.Count; j++)
                 fitnessOfPopulation.Add(fitness_function(population[j]));
 
-            for (int i = 0; fitnessOfPopulation.Max() != 28; i++)
+            while(fitnessOfPopulation.Max() != 28)
             {
 
                 int firstIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
-                string first = population[firstIndex];
+                int first = population[firstIndex];
                 int secondIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
-                string second = population[secondIndex];
+                int second = population[secondIndex];
 
-                string offspring = reproduction(first, second);
+                int offspring = Reproduction(first, second);
 
-                if (MutationChance*10 > r.Next(0, 10))
-                    offspring = mutation(offspring);
+                if (MutationChance*100 > r.Next(0, 101))
+                    offspring = Mutation(offspring);
 
-                population.Add(offspring);
-                fitnessOfPopulation.Add(fitness_function(offspring));
+                if (!population.Contains(offspring))
+                {
+                    population.Add(offspring);
+                    fitnessOfPopulation.Add(fitness_function(offspring));
+                }
             }
 
             Console.WriteLine("Population size: " + population.Count);
             return population[Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max())];
         }
 
-        private static string mutation(string offspring)
+        private static int Mutation(int offspring)
         {
-            char[] offsparray = offspring.ToCharArray();
+            char[] offsparray = offspring.ToString().ToCharArray();
 
-            for (int i = 0; i < piecesMutated; i++)
+            for (int i = 0; i < PiecesMutated; i++)
                 offsparray[r.Next(0, NumOfQueens)] = Convert.ToChar('0' + r.Next(1, 9));
 
-            return new string(offsparray);
+            return int.Parse(new string(offsparray));
         }
 
-        private static string reproduction(string first, string second)
+        private static int Reproduction(int first, int second)
         {
-            double numOfKeptCharacters = first.Length * KeptPieceRatio;
+            int digits = Convert.ToInt32(Math.Floor(Math.Log10(first) + 1));
 
-            return first.Substring(0, (int) numOfKeptCharacters) + second.Substring((int) numOfKeptCharacters);
+            double numOfKeptCharacters = digits * KeptPieceRatio;
+
+            return int.Parse(first.ToString().Substring(0, (int) numOfKeptCharacters) + second.ToString().Substring((int) numOfKeptCharacters));
         }
 
-        private static int fitness_function(string individual)
+        private static int fitness_function(int individual)
         {
             int fitness = 0;
+            int digits = Convert.ToInt32(Math.Floor(Math.Log10(individual) + 1));
 
-            for (int i = 0; i < individual.Length-1; i++)
+            for (int i = 0; i < digits-1; i++)
             {
-                int piece = int.Parse(individual[i].ToString());
+                int piece = (int)(individual.ToString()[i]) - 48;
 
-                for (int j = i+1; j < individual.Length; j++)
+                for (int j = i+1; j < digits; j++)
                 {
-                    int examined = int.Parse(individual[j].ToString());
+                    int examined = (int)(individual.ToString()[j]) - 48;
 
                     if (piece == examined)
                         continue;
 
-                    else if (piece + (j - i) == examined)
+                    else if (examined + (j - i) == piece)
                         continue;
 
-                    else if (piece - (j - i) == examined)
+                    else if (examined - (j - i) == piece)
                         //Yes, this is could be condensed to a single if clause but I'm aiming for readibility
                         continue;
 
@@ -98,17 +101,20 @@ namespace Genetic8Queens
             return fitness;
         }
 
-        private static List<string> initialPopulationGeneration()
+        private static List<int> InitialPopulationGeneration()
         {
-            List<string> population = new List<string>();
+            List<int> population = new List<int>();
 
             for (int i = 0; i < InitialPopulationSize; i++)
             {
-                string individual = "";
+                int individual = 0;
+                int unit = 1;
 
                 for (int j = 0; j < NumOfQueens; j++)
-                    individual += r.Next(1, 9);
-
+                {
+                    individual += r.Next(1, 9)*unit;
+                    unit *= 10;
+                }
                 population.Add(individual);
             }
 
