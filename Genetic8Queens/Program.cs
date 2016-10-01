@@ -1,22 +1,27 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace Genetic8Queens
 {
     class Program
     {
-        const int InitialPopulationSize = 8;
-        const int NumOfQueens = 8;
-        const double KeptPieceRatio = 0.5;
-        const double MutationChance = 0.01;
-        const int PiecesMutated = 2;
-        public static Random r = new Random();
+        static double KeptPieceRatio = 0.5;
+        static double MutationChance = 0.06;
+        static int PiecesMutated = 2;
+        static Random r = new Random();
 
         static void Main(string[] args)
         {
-            Console.WriteLine(Genetic_Algorithm());
+            Stopwatch sw = new Stopwatch();
 
+            sw.Start();
+            Parallel.For((long) 0, 10, index => { Console.WriteLine(index + " " + Genetic_Algorithm()); });
+            sw.Stop();
+
+            Console.WriteLine(sw.ElapsedMilliseconds);
             Console.ReadKey();
         }
 
@@ -31,7 +36,6 @@ namespace Genetic8Queens
 
             while(fitnessOfPopulation.Max() != 28)
             {
-
                 int firstIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
                 int first = population[firstIndex];
                 int secondIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
@@ -58,7 +62,7 @@ namespace Genetic8Queens
             char[] offsparray = offspring.ToString().ToCharArray();
 
             for (int i = 0; i < PiecesMutated; i++)
-                offsparray[r.Next(0, NumOfQueens)] = Convert.ToChar('0' + r.Next(1, 9));
+                offsparray[r.Next(0, 8)] = Convert.ToChar('0' + r.Next(1, 9));
 
             return int.Parse(new string(offsparray));
         }
@@ -105,12 +109,12 @@ namespace Genetic8Queens
         {
             List<int> population = new List<int>();
 
-            for (int i = 0; i < InitialPopulationSize; i++)
+            for (int i = 0; i < 8; i++)
             {
                 int individual = 0;
                 int unit = 1;
 
-                for (int j = 0; j < NumOfQueens; j++)
+                for (int j = 0; j < 8; j++)
                 {
                     individual += r.Next(1, 9)*unit;
                     unit *= 10;
