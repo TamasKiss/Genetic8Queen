@@ -21,27 +21,24 @@ namespace Genetic8Queens
             Parallel.For((long) 0, 10, index => { Console.WriteLine(index + " " + Genetic_Algorithm()); });
             sw.Stop();
 
-            Console.WriteLine(sw.ElapsedMilliseconds);
+            Console.WriteLine("Total Time: " + sw.ElapsedMilliseconds + "ms");
             Console.ReadKey();
         }
 
         private static int Genetic_Algorithm()
         {
-            List<int> population = InitialPopulationGeneration();
+            List<int> population = GenerateInitialPopulation();
 
-            List<int> fitnessOfPopulation = new List<int>();
+            List<int> fitnessOfPopulation = population.Select(fitness_function).ToList(); //Calculating fitness for each instance
 
-            for (int j = 0; j < population.Count; j++)
-                fitnessOfPopulation.Add(fitness_function(population[j]));
-
-            while(fitnessOfPopulation.Max() != 28)
+            while(fitnessOfPopulation.Max() != 28) //When we have the best possible fitness, we have a solution
             {
-                int firstIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
-                int first = population[firstIndex];
-                int secondIndex = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
-                int second = population[secondIndex];
+                int indexOfBest = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
+                int bestInstance = population[indexOfBest];
+                int indexOfSecond = Array.IndexOf(fitnessOfPopulation.ToArray(), fitnessOfPopulation.Max());
+                int second = population[indexOfSecond];
 
-                int offspring = Reproduction(first, second);
+                int offspring = Reproduction(bestInstance, second);
 
                 if (MutationChance*100 > r.Next(0, 101))
                     offspring = Mutation(offspring);
@@ -69,34 +66,30 @@ namespace Genetic8Queens
 
         private static int Reproduction(int first, int second)
         {
-            int digits = Convert.ToInt32(Math.Floor(Math.Log10(first) + 1));
+            int numOfKeptCharacters = (int)(8 * KeptPieceRatio);
 
-            double numOfKeptCharacters = digits * KeptPieceRatio;
-
-            return int.Parse(first.ToString().Substring(0, (int) numOfKeptCharacters) + second.ToString().Substring((int) numOfKeptCharacters));
+            return int.Parse(first.ToString().Substring(0, numOfKeptCharacters) + second.ToString().Substring(numOfKeptCharacters));
         }
 
         private static int fitness_function(int individual)
         {
             int fitness = 0;
-            int digits = Convert.ToInt32(Math.Floor(Math.Log10(individual) + 1));
 
-            for (int i = 0; i < digits-1; i++)
+            for (int i = 0; i < 7; i++) // <Number of columns> - 1 = 7
             {
-                int piece = (int)(individual.ToString()[i]) - 48;
+                int piece = (individual.ToString()[i]) - 48;
 
-                for (int j = i+1; j < digits; j++)
+                for (int j = i+1; j < 8; j++)
                 {
-                    int examined = (int)(individual.ToString()[j]) - 48;
+                    int examined = (individual.ToString()[j]) - 48;
 
                     if (piece == examined)
                         continue;
 
-                    else if (examined + (j - i) == piece)
+                    if (examined + (j - i) == piece)
                         continue;
 
-                    else if (examined - (j - i) == piece)
-                        //Yes, this is could be condensed to a single if clause but I'm aiming for readibility
+                    if (examined - (j - i) == piece)
                         continue;
 
                     fitness++;
@@ -105,7 +98,7 @@ namespace Genetic8Queens
             return fitness;
         }
 
-        private static List<int> InitialPopulationGeneration()
+        private static List<int> GenerateInitialPopulation()
         {
             List<int> population = new List<int>();
 
